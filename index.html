@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff41;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff41;
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.3);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px #00ff41;
+            animation: pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { text-shadow: 0 0 20px #00ff41; }
+            to { text-shadow: 0 0 30px #00ff41, 0 0 40px #00ff41; }
+        }
+
+        .status {
+            font-size: 1.2em;
+            padding: 15px;
+            border: 1px solid #00ff41;
+            border-radius: 10px;
+            background: rgba(0, 255, 65, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .microphone {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #00ff41 0%, #007a1f 100%);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .microphone:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.6);
+        }
+
+        .microphone.listening {
+            animation: listening 1s ease-in-out infinite;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.8);
+        }
+
+        @keyframes listening {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .microphone.speaking {
+            animation: speaking 0.5s ease-in-out infinite;
+            background: radial-gradient(circle, #ff4100 0%, #7a1f00 100%);
+        }
+
+        @keyframes speaking {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .microphone.processing {
+            animation: processing 1.5s linear infinite;
+            background: radial-gradient(circle, #ffaa00 0%, #7a5500 100%);
+        }
+
+        @keyframes processing {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .mic-icon {
+            font-size: 4em;
+            color: white;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: 2px solid #00ff41;
+            background: transparent;
+            color: #00ff41;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #00ff41;
+            color: black;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .response-area {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #00ff41;
+            border-radius: 15px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: rgba(100, 200, 255, 0.1);
+            border-left: 4px solid #64c8ff;
+        }
+
+        .jarvis-message {
+            background: rgba(0, 255, 65, 0.1);
+            border-left: 4px solid #00ff41;
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 4px solid #ff4444;
+            color: #ff8888;
+        }
+
+        .system-message {
+            background: rgba(255, 170, 0, 0.1);
+            border-left: 4px solid #ffaa00;
+            color: #ffcc66;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 255, 65, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .feature-desc {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .circuit-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image: 
+                linear-gradient(90deg, #00ff41 1px, transparent 1px),
+                linear-gradient(180deg, #00ff41 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+        }
+
+        .voice-visualizer {
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 255, 65, 0.1);
+            border-radius: 10px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .voice-bar {
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            background: #00ff41;
+            border-radius: 2px;
+            transition: height 0.1s ease;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: blink 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #00ff41;
+            animation: none;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .title {
+                font-size: 2.5em;
+            }
+            
+            .microphone {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .mic-icon {
+                font-size: 3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="circuit-bg"></div>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🤖 JARVIS AI Assistant</h1>
+            <div class="connection-status">
+                <div class="status-dot" id="connectionDot"></div>
+                <span id="connectionStatus">Connecting to backend...</span>
+            </div>
+            <div class="status" id="status">Initializing systems...</div>
+        </div>
+
+        <div class="main-content">
+            <div class="control-panel">
+                <div class="microphone" id="microphone" onclick="toggleListening()">
+                    <div class="mic-icon">🎤</div>
+                </div>
+                
+                <div class="voice-visualizer" id="voiceVisualizer"></div>
+
+                <div class="controls">
+                    <button class="btn" id="toggleBtn" onclick="toggleListening()">🎙️ Start Listening</button>
+                    <button class="btn" onclick="stopSpeaking()">🔇 Stop Speaking</button>
+                    <button class="btn" onclick="clearChat()">🗑️ Clear Chat</button>
+                    <button class="btn" onclick="testConnection()">🔄 Test Connection</button>
+                </div>
+            </div>
+
+            <div class="response-area" id="responseArea">
+                <div class="message system-message">
+                    <strong>🤖 JARVIS SYSTEM:</strong> Initializing AI assistant...
+                    <br><br>
+                    <strong>🎯 Voice Commands Available:</strong>
+                    <br>• "Open [website]" - Opens websites
+                    <br>• "Search [platform] for [query]" - Performs searches  
+                    <br>• "Create code for [project]" - Generates code
+                    <br>• "Send email to [contact]" - Email assistance
+                    <br>• "Set reminder [task]" - Task management
+                    <br>• "What's the weather?" - Get weather info
+                    <br>• "Tell me about [topic]" - Get information
+                    <br><br>
+                    <strong>⌨️ Shortcuts:</strong> Ctrl+Space (Toggle), Escape (Stop)
+                </div>
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <div class="feature-title">Web Control</div>
+                <div class="feature-desc">Open websites, perform searches, navigate the internet</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💻</div>
+                <div class="feature-title">System Control</div>
+                <div class="feature-desc">Launch applications, manage files, control desktop</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📧</div>
+                <div class="feature-title">Communication</div>
+                <div class="feature-desc">Send emails, WhatsApp messages, manage contacts</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <div class="feature-title">AI Intelligence</div>
+                <div class="feature-desc">Powered by Mistral AI for intelligent responses</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⏰</div>
+                <div class="feature-title">Task Management</div>
+                <div class="feature-desc">Set reminders, manage tasks, schedule events</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎵</div>
+                <div class="feature-title">Media Control</div>
+                <div class="feature-desc">Control Spotify, play music, manage media</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class JarvisAssistant {
+            constructor() {
+                this.isListening = false;
+                this.isSpeaking = false;
+                this.recognition = null;
+                this.synthesis = window.speechSynthesis;
+                this.currentUtterance = null;
+                this.backendUrl = 'http://localhost:5000';
+                this.isConnected = false;
+                
+                this.initSpeechRecognition();
+                this.initVoiceVisualizer();
+                this.testConnection();
+                this.startConnectionMonitor();
+            }
+
+            async testConnection() {
+                try {
+                    const response = await fetch(`${this.backendUrl}/health`);
+                    if (response.ok) {
+                        this.isConnected = true;
+                        this.updateConnectionStatus(true, 'Connected to JARVIS Backend');
+                        this.updateStatus('All systems operational. Ready to assist, Sir.');
+                    } else {
+                        throw new Error('Backend not responding');
+                    }
+                } catch (error) {
+                    this.isConnected = false;
+                    this.updateConnectionStatus(false, 'Backend offline - Check Python server');
+                    this.updateStatus('Backend connection failed. Please start the Python server.');
+                    this.addMessage('system', '⚠️ Backend connection failed. Make sure the Python server is running on port 5000.');
+                }
+            }
+
+            startConnectionMonitor() {
+                setInterval(() => {
+                    this.testConnection();
+                }, 30000); // Check every 30 seconds
+            }
+
+            updateConnectionStatus(connected, message) {
+                const dot = document.getElementById('connectionDot');
+                const status = document.getElementById('connectionStatus');
+                
+                dot.className = connected ? 'status-dot connected' : 'status-dot';
+                status.textContent = message;
+            }
+
+            initSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window) {
+                    this.recognition = new webkitSpeechRecognition();
+                } else if ('SpeechRecognition' in window) {
+                    this.recognition = new SpeechRecognition();
+                } else {
+                    this.addMessage('error', 'Speech recognition not supported in this browser. Please use Chrome or Edge.');
+                    return;
+                }
+
+                this.recognition.continuous = true;
+                this.recognition.interimResults = false;
+                this.recognition.lang = 'en-US';
+
+                this.recognition.onstart = () => {
+                    this.updateStatus('Listening for your command, Sir...');
+                    this.setMicrophoneState('listening');
+                    document.getElementById('toggleBtn').textContent = '🔇 Stop Listening';
+                };
+
+                this.recognition.onresult = async (event) => {
+                    const lastResult = event.results[event.results.length - 1];
+                    if (lastResult.isFinal) {
+                        const transcript = lastResult[0].transcript.trim();
+                        this.addMessage('user', `🗣️ You: ${transcript}`);
+                        await this.processCommand(transcript);
+                    }
+                };
+
+                this.recognition.onerror = (event) => {
+                    this.addMessage('error', `🚫 Speech recognition error: ${event.error}`);
+                    this.stopListening();
+                };
+
+                this.recognition.onend = () => {
+                    if (this.isListening && !this.isSpeaking) {
+                        setTimeout(() => {
+                            if (this.isListening) {
+                                this.recognition.start();
+                            }
+                        }, 100);
+                    }
+                };
+            }
+
+            initVoiceVisualizer() {
+                const visualizer = document.getElementById('voiceVisualizer');
+                for (let i = 0; i < 50; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'voice-bar';
+                    bar.style.left = `${i * 2}%`;
+                    bar.style.height = '5px';
+                    visualizer.appendChild(bar);
+                }
+            }
+
+            animateVoiceVisualizer() {
+                const bars = document.querySelectorAll('.voice-bar');
+                const animate = () => {
+                    if (this.isListening) {
+                        bars.forEach(bar => {
+                            const height = Math.random() * 50 + 5;
+                            bar.style.height = `${height}px`;
+                        });
+                        setTimeout(animate, 100);
+                    } else {
+                        bars.forEach(bar => {
+                            bar.style.height = '5px';
+                        });
+                    }
+                };
+                animate();
+            }
+
+            toggleListening() {
+                if (this.isSpeaking) {
+                    this.stopSpeaking();
+                }
+
+                if (this.isListening) {
+                    this.stopListening();
+                } else {
+                    this.startListening();
+                }
+            }
+
+            startListening() {
+                if (!this.isConnected) {
+                    this.addMessage('error', '⚠️ Cannot start listening - backend not connected');
+                    return;
+                }
+
+                if (this.recognition && !this.isListening) {
+                    this.isListening = true;
+                    this.recognition.start();
+                    this.animateVoiceVisualizer();
+                }
+            }
+
+            stopListening() {
+                if (this.recognition && this.isListening) {
+                    this.isListening = false;
+                    this.recognition.stop();
+                    this.updateStatus('Stopped listening.');
+                    this.setMicrophoneState('idle');
+                    document.getElementById('toggleBtn').textContent = '🎙️ Start Listening';
+                }
+            }
+
+            async processCommand(command) {
+                if (!this.isConnected) {
+                    this.addMessage('error', '⚠️ Backend not connected. Cannot process command.');
+                    return;
+                }
+
+                this.setMicrophoneState('processing');
+                this.updateStatus('Processing your request...');
+
+                try {
+                    const response = await fetch(`${this.backendUrl}/process_command`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ command: command })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        this.addMessage('jarvis', `🤖 JARVIS: ${data.response}`);
+                        
+                        // Handle actions
+                        if (data.actions) {
+                            for (const action of data.actions) {
+                                await this.executeAction(action);
+                            }
+                        }
+                        
+                        // Speak the response
+                        this.speak(data.response);
+                    } else {
+                        this.addMessage('error', `❌ Error: ${data.error}`);
+                        this.setMicrophoneState('idle');
+                    }
+                } catch (error) {
+                    this.addMessage('error', `🚫 Network error: ${error.message}`);
+                    this.setMicrophoneState('idle');
+                }
+            }
+
+            async executeAction(action) {
+                switch (action.type) {
+                    case 'open_website':
+                        window.open(action.url, '_blank');
+                        this.addMessage('system', `🌐 Opened: ${action.url}`);
+                        break;
+                    
+                    case 'search':
+                        const searchUrl = `${action.base_url}${encodeURIComponent(action.query)}`;
+                        window.open(searchUrl, '_blank');
+                        this.addMessage('system', `🔍 Searched: ${action.query} on ${action.platform}`);
+                        break;
+                    
+                    case 'create_file':
+                        this.downloadFile(action.filename, action.content);
+                        this.addMessage('system', `📄 Created file: ${action.filename}`);
+                        break;
+                    
+                    case 'reminder':
+                        this.setReminder(action.message, action.time);
+                        this.addMessage('system', `⏰ Reminder set: ${action.message}`);
+                        break;
+                    
+                    default:
+                        console.log('Unknown action:', action);
+                }
+            }
+
+            downloadFile(filename, content) {
+                const element = document.createElement('a');
+                const file = new Blob([content], { type: 'text/plain' });
+                element.href = URL.createObjectURL(file);
+                element.download = filename;
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+            }
+
+            setReminder(message, seconds) {
+                setTimeout(() => {
+                    this.addMessage('system', `🔔 Reminder: ${message}`);
+                    this.speak(`Reminder: ${message}`);
+                }, seconds * 1000);
+            }
+
+            speak(text, callback) {
+                if (this.isListening) {
+                    this.stopListening();
+                }
+
+                this.isSpeaking = true;
+                this.setMicrophoneState('speaking');
+                this.updateStatus('Speaking...');
+
+                // Cancel any existing speech
+                this.synthesis.cancel();
+
+                this.currentUtterance = new SpeechSynthesisUtterance(text);
+                this.currentUtterance.rate = 0.9;
+                this.currentUtterance.pitch = 0.8;
+                this.currentUtterance.volume = 0.8;
+
+                // Try to use a better voice
+                const voices = this.synthesis.getVoices();
+                const preferredVoice = voices.find(voice => 
+                    voice.name.includes('Google') || 
+                    voice.name.includes('Microsoft') ||
+                    voice.name.includes('Male') ||
+                    voice.lang.includes('en')
+                );
+                if (preferredVoice) {
+                    this.currentUtterance.voice = preferredVoice;
+                }
+
+                this.currentUtterance.onend = () => {
+                    this.isSpeaking = false;
+                    this.setMicrophoneState('idle');
+                    this.updateStatus('Ready for next command, Sir.');
+                    
+                    // Resume listening after speaking
+                    setTimeout(() => {
+                        if (!this.isListening) {
+                            this.startListening();
+                        }
+                    }, 500);
+                    
+                    if (callback) callback();
+                };
+
+                this.synthesis.speak(this.currentUtterance);
+            }
+
+            stopSpeaking() {
+                if (this.isSpeaking && this.synthesis.speaking) {
+                    this.synthesis.cancel();
+                    this.isSpeaking = false;
+                    this.setMicrophoneState('idle');
+                    this.updateStatus('Speech stopped.');
+                }
+            }
+
+            setMicrophoneState(state) {
+                const mic = document.getElementById('microphone');
+                mic.className = 'microphone';
+                if (state !== 'idle') {
+                    mic.classList.add(state);
+                }
+            }
+
+            updateStatus(message) {
+                document.getElementById('status').textContent = message;
+            }
+
+            addMessage(type, text) {
+                const responseArea = document.getElementById('responseArea');
+                const div = document.createElement('div');
+                div.className = `message ${type}-message`;
+                div.innerHTML = text.replace(/\n/g, '<br>');
+                responseArea.appendChild(div);
+                responseArea.scrollTop = responseArea.scrollHeight;
+            }
+
+            clearChat() {
+                const responseArea = document.getElementById('responseArea');
+                responseArea.innerHTML = '<div class="message system-message"><strong>🤖 JARVIS:</strong> Chat cleared. How may I assist you, Sir?</div>';
+            }
+        }
+
+        // Global functions
+        let jarvis;
+
+        function toggleListening() {
+            if (jarvis) jarvis.toggleListening();
+        }
+
+        function stopSpeaking() {
+            if (jarvis) jarvis.stopSpeaking();
+        }
+
+        function clearChat() {
+            if (jarvis) jarvis.clearChat();
+        }
+
+        function testConnection() {
+            if (jarvis) jarvis.testConnection();
+        }
+
+        // Initialize JARVIS when page loads
+        window.addEventListener('load', () => {
+            // Wait for voices to load
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = () => {
+                    jarvis = new JarvisAssistant();
+                };
+            } else {
+                jarvis = new JarvisAssistant();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && event.ctrlKey) {
+                event.preventDefault();
+                toggleListening();
+            } else if (event.code === 'Escape') {
+                if (jarvis && jarvis.isSpeaking) {
+                    stopSpeaking();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
